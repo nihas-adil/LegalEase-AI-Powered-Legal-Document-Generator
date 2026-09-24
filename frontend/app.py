@@ -1,3 +1,24 @@
+# =========================================================
+# PROJECT PATH FIX
+# =========================================================
+
+import os
+import sys
+
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+
+# =========================================================
+# IMPORTS
+# =========================================================
+
 from datetime import date
 
 import requests
@@ -102,7 +123,6 @@ if "document" not in st.session_state:
 if "generated" not in st.session_state:
     st.session_state.generated = False
 
-# Controls whether the editor is visible
 if "edit_mode" not in st.session_state:
     st.session_state.edit_mode = False
 
@@ -115,10 +135,6 @@ with st.sidebar:
 
     st.header("Document Details")
 
-    # -----------------------------------------------------
-    # DOCUMENT TYPE
-    # -----------------------------------------------------
-
     document_type = st.text_input(
         "Document Type",
         placeholder="Example: Freelance Work Contract",
@@ -129,10 +145,6 @@ with st.sidebar:
         ),
         key="document_type_input",
     )
-
-    # -----------------------------------------------------
-    # PARTIES INVOLVED
-    # -----------------------------------------------------
 
     parties = st.text_area(
         "Parties Involved",
@@ -148,10 +160,6 @@ with st.sidebar:
         ),
         key="parties_input",
     )
-
-    # -----------------------------------------------------
-    # TERMS & CONDITIONS
-    # -----------------------------------------------------
 
     terms = st.text_area(
         "Terms & Conditions",
@@ -173,10 +181,6 @@ with st.sidebar:
         "💡 Use semicolons (;) to separate each term."
     )
 
-    # -----------------------------------------------------
-    # EFFECTIVE DATE
-    # -----------------------------------------------------
-
     effective_date = st.date_input(
         "Effective Date",
         value=date.today(),
@@ -186,10 +190,6 @@ with st.sidebar:
         ),
         key="effective_date_input",
     )
-
-    # -----------------------------------------------------
-    # GENERATE BUTTON
-    # -----------------------------------------------------
 
     generate_button = st.button(
         "Generate Document",
@@ -207,41 +207,19 @@ if generate_button:
     clean_document_type = document_type.strip()
     clean_parties = parties.strip()
     clean_terms = terms.strip()
-
-    # Keep exact ISO date for backend
     clean_date = effective_date.isoformat()
 
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
-
     if not clean_document_type:
-
-        st.error(
-            "Please enter the document type."
-        )
-
+        st.error("Please enter the document type.")
         st.stop()
 
     if not clean_parties:
-
-        st.error(
-            "Please enter the parties involved."
-        )
-
+        st.error("Please enter the parties involved.")
         st.stop()
 
     if not clean_terms:
-
-        st.error(
-            "Please enter the terms and conditions."
-        )
-
+        st.error("Please enter the terms and conditions.")
         st.stop()
-
-    # -----------------------------------------------------
-    # BACKEND PAYLOAD
-    # -----------------------------------------------------
 
     payload = {
         "document_type": clean_document_type,
@@ -250,25 +228,15 @@ if generate_button:
         "effective_date": clean_date,
     }
 
-    # -----------------------------------------------------
-    # SEND REQUEST
-    # -----------------------------------------------------
-
     try:
 
-        with st.spinner(
-            "Generating legal document..."
-        ):
+        with st.spinner("Generating legal document..."):
 
             response = requests.post(
                 f"{BACKEND_URL}/generate",
                 json=payload,
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
-
-        # -------------------------------------------------
-        # SUCCESS
-        # -------------------------------------------------
 
         if response.status_code == 200:
 
@@ -287,39 +255,23 @@ if generate_button:
 
             else:
 
-                st.session_state.document = (
-                    generated_content
-                )
-
+                st.session_state.document = generated_content
                 st.session_state.generated = True
-
-                # Start with editor hidden
                 st.session_state.edit_mode = False
 
-                # Save document information
                 st.session_state.document_type = (
                     clean_document_type
                 )
 
-                st.session_state.parties = (
-                    clean_parties
-                )
+                st.session_state.parties = clean_parties
 
-                st.session_state.terms = (
-                    clean_terms
-                )
+                st.session_state.terms = clean_terms
 
-                st.session_state.effective_date = (
-                    clean_date
-                )
+                st.session_state.effective_date = clean_date
 
                 st.success(
                     "Document generated successfully!"
                 )
-
-        # -------------------------------------------------
-        # BACKEND ERROR
-        # -------------------------------------------------
 
         else:
 
@@ -341,10 +293,6 @@ if generate_button:
                     response.text
                 )
 
-    # -----------------------------------------------------
-    # CONNECTION ERROR
-    # -----------------------------------------------------
-
     except requests.exceptions.ConnectionError:
 
         st.error(
@@ -355,19 +303,11 @@ if generate_button:
             "Make sure FastAPI is running on port 8000."
         )
 
-    # -----------------------------------------------------
-    # TIMEOUT
-    # -----------------------------------------------------
-
     except requests.exceptions.Timeout:
 
         st.error(
             "Request timed out. Please try again."
         )
-
-    # -----------------------------------------------------
-    # OTHER ERROR
-    # -----------------------------------------------------
 
     except Exception as e:
 
@@ -383,10 +323,6 @@ if generate_button:
 if st.session_state.document:
 
     st.divider()
-
-    # =====================================================
-    # DOCUMENT PREVIEW
-    # =====================================================
 
     st.markdown(
         '<div class="section-title">Document Preview</div>',
@@ -419,7 +355,6 @@ if st.session_state.document:
         if edit_button:
 
             st.session_state.edit_mode = True
-
             st.rerun()
 
     # =====================================================
@@ -441,10 +376,6 @@ if st.session_state.document:
             key="document_editor",
         )
 
-        # -------------------------------------------------
-        # SAVE / CANCEL BUTTONS
-        # -------------------------------------------------
-
         save_col, cancel_col = st.columns(2)
 
         with save_col:
@@ -464,10 +395,7 @@ if st.session_state.document:
 
         if save_button:
 
-            st.session_state.document = (
-                edited_document
-            )
-
+            st.session_state.document = edited_document
             st.session_state.edit_mode = False
 
             st.success(
@@ -479,7 +407,6 @@ if st.session_state.document:
         if cancel_button:
 
             st.session_state.edit_mode = False
-
             st.rerun()
 
         st.divider()
@@ -495,17 +422,12 @@ if st.session_state.document:
 
     col1, col2, col3 = st.columns(3)
 
-    # =====================================================
-    # CLEAN DOCUMENT
-    # =====================================================
-
     clean_document = (
         st.session_state.document
         .replace("**", "")
         .replace("\\_", "_")
     )
 
-    # Get saved document details
     saved_document_type = st.session_state.get(
         "document_type",
         document_type,

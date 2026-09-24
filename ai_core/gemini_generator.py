@@ -4,7 +4,6 @@ import time
 from dotenv import load_dotenv
 from google import genai
 
-
 load_dotenv()
 
 
@@ -23,7 +22,10 @@ class GeminiDocumentGenerator:
             api_key=self.api_key
         )
 
-        self.model = "gemini-3.5-flash"
+        self.model = os.getenv(
+            "GEMINI_MODEL",
+            "gemini-3.6-flash"
+        )
 
     def generate_document(
         self,
@@ -51,15 +53,12 @@ EFFECTIVE DATE:
 
 IMPORTANT DATE RULE:
 Use the EXACT effective date provided above.
-Do not change, reinterpret, guess, or replace the year,
-month, or day.
 
-The effective date in the generated document MUST exactly
-match the user's selected date.
+Do not change, reinterpret, guess, or replace the
+year, month, or day.
 
-Do not use a different year.
-Do not use a different month.
-Do not use a different day.
+The effective date in the generated document MUST
+exactly match the user's selected date.
 
 TERMS AND CONDITIONS:
 {terms}
@@ -70,7 +69,7 @@ Instructions:
 
 2. Use the requested document type as the main title.
 
-3. Include the effective date exactly as provided by the user.
+3. Include the effective date exactly as provided.
 
 4. Clearly identify all parties.
 
@@ -78,26 +77,24 @@ Instructions:
 
 6. Organize the document into numbered legal sections.
 
-7. Add appropriate standard clauses when necessary.
+7. Add appropriate standard clauses where necessary.
 
 8. Use formal and professional legal language.
 
 9. Include termination, confidentiality, governing law,
-   and entire agreement clauses where appropriate.
+and entire agreement clauses where appropriate.
 
 10. Include a signature section at the end.
 
 11. Do not invent specific names, addresses, amounts,
-    dates, or facts that were not provided by the user.
+dates, or facts that were not provided by the user.
 
-12. Do not change, reinterpret, or replace the effective date.
+12. Do not change the effective date.
 
 13. Do not create a different date from the information
-    provided by the user.
+provided by the user.
 
-14. Do not provide explanations outside the document.
-
-15. Return only the final document text.
+14. Return only the final document text.
 
 This document is an AI-generated draft and should be
 reviewed by a qualified legal professional before use.
@@ -105,7 +102,6 @@ reviewed by a qualified legal professional before use.
 
         response = None
 
-        # Retry Gemini request if temporary 503 error occurs
         for attempt in range(3):
 
             try:
@@ -119,11 +115,12 @@ reviewed by a qualified legal professional before use.
 
             except Exception as e:
 
-                error_text = str(e)
+                error_text = str(e).upper()
 
                 if (
                     "503" in error_text
                     or "UNAVAILABLE" in error_text
+                    or "SERVICE UNAVAILABLE" in error_text
                 ):
 
                     if attempt < 2:
